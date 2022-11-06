@@ -1,11 +1,14 @@
 use super::*;
+use core::time;
 use std::net::SocketAddr;
 use std::os::unix::io::AsRawFd;
+use tokio::io::unix::AsyncFd;
 
 /// An object representing the communication context.
 #[derive(Debug)]
 pub struct Worker {
     pub(super) handle: ucp_worker_h,
+    #[allow(dead_code)]
     context: Arc<Context>,
 }
 
@@ -34,6 +37,27 @@ impl Worker {
         while Rc::strong_count(&self) > 1 {
             while self.progress() != 0 {}
             futures_lite::future::yield_now().await;
+        }
+    }
+
+    pub async fn event_poll(self: Rc<Self>) {
+        let fd = self.event_fd();
+        let wait_fd = AsyncFd::new(fd).unwrap();
+        while Rc::strong_count(&self) > 1 {
+            while self.progress() != 0 {}
+            if self.arm() {
+                let mut ready = wait_fd.readable().await.unwrap();
+                ready.clear_ready();
+            }
+        }
+    }
+
+    pub async fn polling_thread(self: Rc<Self>) {
+        while Rc::strong_count(&self) > 1 {
+            while self.progress() != 0 {}
+            futures_lite::future::yield_now().await;
+            let sleep_time = time::Duration::from_millis(1);
+            std::thread::sleep(sleep_time);
         }
     }
 

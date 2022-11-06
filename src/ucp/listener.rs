@@ -7,6 +7,7 @@ use std::net::SocketAddr;
 #[derive(Debug)]
 pub struct Listener {
     handle: ucp_listener_h,
+    #[allow(dead_code)]
     sender: Rc<mpsc::UnboundedSender<ConnectionRequest>>,
     recver: mpsc::UnboundedReceiver<ConnectionRequest>,
 }

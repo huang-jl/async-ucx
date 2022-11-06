@@ -9,11 +9,12 @@ description = "Async Rust bindings to OpenUCX."
 
 [dependencies]
 ucx-sys = { path = "ucx-sys" }
-os_socketaddr = "0.1"
+os_socketaddr = "0.2"
 futures = "0.3"
 futures-lite = "1.11"
 lazy_static = "1.4"
 log = "0.4"
+tokio = { version = "1.0", features = ["net"] }
 
 [dev-dependencies]
 env_logger = "0.8"
